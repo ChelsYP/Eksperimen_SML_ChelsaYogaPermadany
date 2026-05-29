@@ -1,0 +1,54 @@
+name: Automated Preprocessing Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'raisin_raw/**'
+      - 'preprocessing/automate_ChelsaYogaPermadany.py'
+  workflow_dispatch:  # Bisa trigger manual dari GitHub UI
+
+jobs:
+  preprocessing:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Python
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 3. Install dependencies
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas scikit-learn openpyxl
+
+      # 4. Jalankan script preprocessing
+      - name: Run Preprocessing Script
+        run: |
+          python preprocessing/automate_ChelsaYogaPermadany.py
+
+      # 5. Upload hasil preprocessing sebagai artifact
+      - name: Upload Preprocessed Dataset
+        uses: actions/upload-artifact@v4
+        with:
+          name: raisin-preprocessed
+          path: preprocessing/raisin_preprocessing/raisin_preprocessed.csv
+
+      # 6. Commit & push hasil preprocessing ke repository
+      - name: Commit Preprocessed Data to Repo
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add preprocessing/raisin_preprocessing/raisin_preprocessed.csv
+          git diff --staged --quiet || git commit -m "auto: update preprocessed dataset [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
