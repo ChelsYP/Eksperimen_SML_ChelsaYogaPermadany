@@ -7,16 +7,24 @@ on:
     paths:
       - 'raisin_raw/**'
       - 'preprocessing/automate_ChelsaYogaPermadany.py'
-  workflow_dispatch:  # Bisa trigger manual dari GitHub UI
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Fix Node.js 24 warning
 
 jobs:
   preprocessing:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write  # Fix exit code 128 — izinkan workflow push ke repo
+
     steps:
       # 1. Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # 2. Setup Python
       - name: Setup Python 3.12
